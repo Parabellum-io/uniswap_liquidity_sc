@@ -2,7 +2,7 @@ pragma solidity >=0.6.6<=0.7.1;
 
 interface IUniswap {
 
-        function swapTokensForETH(
+        function swapExactETHForTokens(
                 uint amountIn, 
                 uint amountOutMin, 
                 address[] calldata path, 
@@ -52,18 +52,21 @@ contract swap {
 
     /*
         
-        address token,
-        uint amountIn,
-        uint amountOutMin,
-        uint deadline
+        address token - is considered the target token: From ETH to DAI or from ETH to USDC where DAI or USDC is the target token and ETH is the Source token,
+        uint amountIn - How much ETH or source asset you want to put in to get the right amount of return from the target token.  
+        uint amountOutMin - The minimum amount of output tokens that must be received for the transaction not to revert.
+        address[] path - The way the tokens will be "swapped".  For example, from ETH to DAI or ETH to USDC or ETH to WETH
+        to - Recipient of the output tokens
+        uint deadline - basically a timestamp for the transaction to execute.  Eventually must time out if it is taking too long. 
+                        Transaction will revert
     */
-    function swapTokensForETH()
+    function swapTokensForETH(address _targetToken, uint _amountIn, uint _amountOutMin, uint _deadline)
     external  {
         //mock data
-        address token = 0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735; //DAI
-        uint amountIn = 1000000000000000;
-        uint amountOutMin = 2141362528302760221;
-        uint deadline = 1618237897;
+        address token = _targetToken; //0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735; //DAI
+        uint amountIn = _amountIn; //1000000000000000;
+        uint amountOutMin = _amountOutMin; //2141362528302760221;
+        uint deadline = _deadline; //1618237897;
 
         IERC20(token).transferFrom(msg.sender, address(this), amountIn);
         //build arguments
@@ -73,7 +76,7 @@ contract swap {
 
         //need to approve Uniswap to do a trade
         IERC20(token).approve(address(uniswap),amountIn);
-        uniswap.swapTokensForETH(
+        uniswap.swapExactETHForTokens(
             amountIn,
             amountOutMin,
             path,
@@ -82,4 +85,6 @@ contract swap {
         );
 
     }
+
+    receive() payable external {}
 }
