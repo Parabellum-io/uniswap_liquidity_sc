@@ -2,6 +2,7 @@ pragma solidity >=0.6.6<=0.7.1;
 
 interface IUniswap {
 
+        //For Swapping Assets
         function swapExactETHForTokens(
                 uint amountIn, 
                 uint amountOutMin, 
@@ -12,6 +13,32 @@ interface IUniswap {
 
         function WETH() external pure returns (address);
 
+        /*
+        * For adding to liquidity pools
+        * Adds liquidity to an ERC20 <=> ERC20
+        */
+        function addLiquidity(
+                address tokenA,
+                address tokenB,
+                uint amountADesired,
+                uint amountBDesired,
+                uint amountAMin,
+                uint amountBMin,
+                address to,
+                uint deadline
+                ) external returns (uint amountA, uint amountB, uint liquidity);
+
+        /*
+        * Adds liquidity to ERC20 <=> WETH pool with ETH
+        */
+        function addLiquidityETH(
+                address token,
+                uint amountTokenDesired,
+                uint amountTokenMin,
+                uint amountETHMin,
+                address to,
+                uint deadline
+                ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 }
 
 interface IERC20 {
@@ -36,6 +63,7 @@ interface IERC20 {
      * transaction ordering. One possible solution to mitigate this race
      * condition is to first reduce the spender's allowance to 0 and set the
      * desired value afterwards:
+      
      * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
      *
      * Emits an {Approval} event.
@@ -50,8 +78,37 @@ contract swap {
         uniswap = IUniswap(_uniswap);
     }
 
+    function appAddLiquidity(
+                address tokenA,
+                address tokenB,
+                uint amountADesired,
+                uint amountBDesired,
+                uint amountAMin,
+                uint amountBMin,
+                address to,
+                uint deadline
+                ) external returns (uint amountA, uint amountB, uint liquidity) {
+            //IERC20(token).approve(address(uniswap),amountIn); //if erc20 to erc20, does it require approval?
+            //uniswap.addLiquidity(token, amountTokenDesired, amountTokenMin, amountETHMin, to, deadline);
+    }
+
+    function appAddLiquidityETH(
+                address token,
+                uint amountTokenDesired,
+                uint amountTokenMin,
+                uint amountETHMin,
+                address to,
+                uint deadline
+                ) external payable returns (uint amountToken, uint amountETH, uint liquidity) {
+            bool isapproved = IERC20(token).approve(address(uniswap),amountTokenDesired);
+            if(isapproved) {
+                    uniswap.addLiquidityETH{value:msg.value}(token, amountTokenDesired, amountTokenMin, amountETHMin, to, deadline);
+                    return(amountToken, amountETH, liquidity);
+            }
+            
+    }
+
     /*
-        
         address token - is considered the target token: From ETH to DAI or from ETH to USDC where DAI or USDC is the target token and ETH is the Source token,
         uint amountIn - How much ETH or source asset you want to put in to get the right amount of return from the target token.  
         uint amountOutMin - The minimum amount of output tokens that must be received for the transaction not to revert.
@@ -60,7 +117,7 @@ contract swap {
         uint deadline - basically a timestamp for the transaction to execute.  Eventually must time out if it is taking too long. 
                         Transaction will revert
     */
-    function swapTokensForETH(address _targetToken, uint _amountIn, uint _amountOutMin, uint _deadline)
+    function appSwapExactETHForTokens(address _targetToken, uint _amountIn, uint _amountOutMin, uint _deadline)
     external  {
         //mock data
         address token = _targetToken; //0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735; //DAI
